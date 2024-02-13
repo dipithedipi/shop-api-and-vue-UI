@@ -1,0 +1,151 @@
+openapi: "3.0.0"
+info:
+  title: "Shop API"
+  version: "1.0.0"
+  description: "This is a simple API for a shop"
+basePath: "/"
+paths:
+  /products:
+    get:
+      summary: "Retrieve a list of products"
+      responses:
+        '200':
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database query error!"
+  /customers:
+    get:
+      summary: "Retrieve a list of customers"
+      responses:
+        '200':
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database query error!"
+  /employees:
+    get:
+      summary: "Retrieve a list of employees"
+      responses:
+        '200':
+          description: "Successful operation"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database query error!"
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        productCode:
+          type: string
+        productName:
+          type: string
+        productLine:
+          type: string
+        productScale:
+          type: string
+        productVendor:
+          type: string
+        productDescription:
+          type: string
+        quantityInStock:
+          type: integer
+        buyPrice:
+          type: number
+          format: float
+        MSRP:
+          type: number
+          format: float
+    Customer:
+      type: object
+      properties:
+        customerNumber:
+          type: integer
+        customerName:
+          type: string
+        contactLastName:
+          type: string
+        contactFirstName:
+          type: string
+        phone:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        salesRepEmployeeNumber:
+          type: integer
+        creditLimit:
+          type: number
+          format: float
+        email:
+          type: string
+    Employee:
+      type: object
+      properties:
+        employeeNumber:
+          type: integer
+        lastName:
+          type: string
+        firstName:
+          type: string
+        extension:
+          type: string
+        email:
+          type: string
+        officeCode:
+          type: string
+        reportsTo:
+          type: integer
+        jobTitle:
+          type: string
+        pwd:
+          type: string
