@@ -27,6 +27,35 @@ paths:
                   message:
                     type: string
                     example: "Database query error!"
+    /{category}:
+      get:
+        summary: "Retrieve a list of products by category"
+        parameters:
+          - in: path
+            name: category
+            required: true
+            description: "Product category"
+            schema:
+              type: string
+        responses:
+          '200':
+            description: "Successful operation"
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Product'
+          '500':
+            description: "Internal Server Error"
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "Database query error!"
   /customers:
     get:
       summary: "Retrieve a list of customers"
@@ -52,6 +81,19 @@ paths:
   /employees:
     get:
       summary: "Retrieve a list of employees"
+      parameters:
+        - in: query
+          name: email
+          required: true
+          description: "Employee's email"
+          schema:
+            type: string
+        - in: query
+          name: password
+          required: true
+          description: "Employee's password"
+          schema:
+            type: string
       responses:
         '200':
           description: "Successful operation"
