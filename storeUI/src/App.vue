@@ -3,6 +3,7 @@
     <nav>
       <router-link to="/">Home</router-link> |
       <router-link to="/customers">Customers</router-link> |
+      <router-link to="/employees">Employees</router-link> |
       <router-link to="/products">Products</router-link> |
       <router-link to="/about">About</router-link>
     </nav>
