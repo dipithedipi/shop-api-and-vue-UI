@@ -4,7 +4,7 @@
       <template v-slot:header="{ page, pageCount, prevPage, nextPage }">
         <h1 class="text-h4 font-weight-bold d-flex justify-space-between mb-4 align-center">
           <div class="text-truncate">
-            Products
+            Products:{{ this.category }}
           </div>
 
           <div>
@@ -78,11 +78,17 @@
                   <tr align="right">
                     <th>Scale:</th>
                     <td>
-                      <v-rating class="stars-container" half-increments hover readonly :length="5" :size="30"
-                        :model-value="item.raw.productScale" active-color="primary" />
+                      {{ item.raw.productScale }}
                     </td>
                   </tr>
 
+                  <tr align="right">
+                    <th>Vendor:</th>
+                    <td>
+                      {{ item.raw.productVendor }}
+                    </td>
+                  </tr>
+                  
                   <tr align="right">
                     <th>Price:</th>
                     <td>
@@ -129,6 +135,7 @@ export default {
   data() {
     return {
       products: [],
+      category: '',
       itemsPerPage: 8,
     };
   },
@@ -142,9 +149,11 @@ export default {
     async getProductsData(category) {
       if (category) {
         this.products = await fetch(`http://127.0.0.1:3000/products/${category}`).then(response => response.json());
+        this.category = category;
         return;
       }
       this.products = await fetch('http://127.0.0.1:3000/products').then(response => response.json());
+      this.category = '';
       console.log(this.products);
     },
   },
