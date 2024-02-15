@@ -101,7 +101,7 @@ app.get('/employees/:email/:password', (req, res) => {
     });
 });
 
-//login for customers
+//auth for customers
 app.post("/login/customer", (req, res) => {
 
     let email = req.body.email;
@@ -131,6 +131,60 @@ app.post("/login/customer", (req, res) => {
             }
             res.status(200).json({ token: token, user: result });
         });
+    });
+});
+
+app.post("/register/customer", (req, res) => {
+    let customerNumber  = req.body.customerNumber;
+    let customerName = req.body.customerName;
+    let contactLastName = req.body.contactLastName;
+    let contactFirstName = req.body.contactFirstName;
+    let phone = req.body.phone;
+    let addressLine1 = req.body.addressLine1;
+    let addressLine2 = req.body.addressLine2;
+    let city = req.body.city;
+    let state = req.body.state;
+    let postalCode = req.body.postalCode;
+    let country = req.body.country;
+    //let salesRepEmployeeNumber = req.body.salesRepEmployeeNumber;
+    let creditLimit = req.body.creditLimit;
+
+
+    let email = req.body.email;
+    let password = req.body.password;
+
+    if (!email || !password) {
+        res.status(400).json({ message: "Email and password are required!" });
+        return;
+    }
+
+    if (password.length < 6) {
+        res.status(400).json({ message: "Password must be at least 6 characters long!" });
+        return;
+    }
+
+    db.query('SELECT * FROM customers WHERE email = ?', [email], (err, result) => {
+        if (err) {
+            console.error('[!] Error: ' + err.stack);
+            res.status(500).json({ message: "Database query error!" });
+            return;
+        }
+
+        if (result.length > 0) {
+            res.status(400).json({ message: "Email already exists!" });
+            return;
+        }
+    });
+
+    let hashedPassword = sha256(String(password + PASSWORD_SALT)).toString();
+
+    db.query('INSERT INTO customers (customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, hashedPassword], (err, result) => {
+        if (err) {
+            console.error('[!] Error: ' + err.stack);
+            res.status(500).json({ message: "Database query error!" });
+            return;
+        }
+        res.status(200).json({ message: "Customer registered successfully!" });
     });
 });
 
