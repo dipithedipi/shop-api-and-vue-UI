@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-    <nav>
-      <router-link to="/">Home</router-link> |
+    <nav>      
+      <router-link to="/products">Home</router-link> |
+      <router-link to="/login">Login</router-link> |
       <router-link to="/customers">Customers</router-link> |
       <router-link to="/employees">Employees</router-link> |
-      <router-link to="/products">Products</router-link> |
       <router-link to="/about">About</router-link>
     </nav>
     <div
@@ -16,7 +16,7 @@
       </log-user>
     </div>
       <div v-else>
-        <router-link v-if="$route.path !== '/'" to="/">
+        <router-link v-if="$route.path !== '/login'" to="/login">
           Sign in / Sign up
         </router-link>
       </div>

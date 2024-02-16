@@ -86,20 +86,17 @@
 
 
 <script>
-import users from "../../public/users.json";
-import { faker } from '@faker-js/faker';
 
 export default {
   name: 'HomeView',
   data() {
     return {
       visible: false,
-      users: JSON.parse(localStorage.getItem("users")) || users,
       userEmail: "",
       userPassword: "",
       emailRules: [
         value => !!value || 'Required.',
-        value => (value || '').length <= 20 || 'Max 20 characters',
+        value => (value || '').length <= 32 || 'Max 32 characters',
         value => {
           const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
           return pattern.test(value) || 'Invalid e-mail.'
@@ -108,7 +105,7 @@ export default {
       passwordRules: [
         value => !!value || 'Required.',
         value => (value || '').length <= 32 || 'Max 32 characters',
-        value => (value || '').length >= 8 || 'Min 8 characters',
+        value => (value || '').length >= 6 || 'Min 6 characters',
       ],
       randomInfo: true,
     }
@@ -116,119 +113,42 @@ export default {
   methods: {
     login(email, password) {
       if (email === "" || password === "") {
-        console.log("login: ", "Please enter email and password");
+        alert("Please enter email and password");
         return false;
       }
-      for (let i = 0; i < this.users.length; i++) {
-        if (this.users[i].email === email && this.users[i].password === password) {
-          console.log("login: ", this.users[i]);
-          this.saveLocalLoggedUser(i);
+      fetch("http://127.0.0.1:3000/login/customers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.parse({
+          email: email,
+          password: password
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.status === "success") {
+          localStorage.setItem("ALREADY_LOGGED", true)
+          localStorage.setItem("JWT", data.token)
           return true;
         }
-      }
-      console.log("login: ", "User not found");
-      return false;
-    },
-    register(email, password) {
-      if (this.login(email, password)) {
-        console.log("register: ", "User already exists");
-        return false;
-      }
-      if (this.randomInfo) {
-        this.users.push(
-          new Object({
-            id: this.users.length + 1,
-            firstName: faker.person.firstName(),
-            lastName: faker.person.lastName(),
-            maidenName: faker.person.middleName(),
-            age: faker.number.int({ min: 16, max: 100 }),
-            gender: faker.person.sexType(),
-            email: email,
-            image: faker.image.avatarLegacy(),
-            phone: faker.phone.number(),
-            username: faker.internet.userName(),
-            password: password,
-            birthDate: faker.date.birthdate(),
-            bloodGroup: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"][Math.floor(Math.random() * 8)],
-            height: faker.number.int({ min: 150, max: 200 }),
-            weight: Math.floor(faker.number.float({ min: 30, max: 200 })*100)/100,
-            eyeColor: ["Green", "Red", "Blue", "Yellow", "Orange", "Gray"][Math.floor(Math.random() * 6)],
-            hair: {
-              color: ["Green", "Red", "Blue", "Yellow", "Orange", "Gray"][Math.floor(Math.random() * 6)],
-              type: ["Straight", "Curly", "Wavy", "Coily", "Silky"][Math.floor(Math.random() * 5)],
-            },
-            domain: faker.internet.domainName(),
-            ip: faker.internet.ip(),
-            address: {
-              address: faker.location.streetAddress(),
-              city: faker.location.city(),
-              coordinates: {
-                lat: faker.location.latitude(),
-                lng: faker.location.longitude()
-              },
-              postalCode: faker.number.int({ min: 10000, max: 30000 }),
-              state: faker.location.countryCode('alpha-2')
-            },
-            macAddress: faker.internet.mac(),
-            university: String(faker.location.state() + " University"),
-            bank: {
-              cardExpire: faker.date.future(),
-              cardNumber: faker.finance.creditCardNumber(),
-              cardType: ["maestro", "visa"][Math.floor(Math.random() * 2)],
-              currency: faker.finance.currency(),
-              iban: faker.finance.iban()
-            },
-            company: {
-              address: {
-                address: faker.location.streetAddress(),
-                city: faker.location.city(),
-                coordinates: {
-                  lat: faker.location.latitude(),
-                  lng: faker.location.longitude()
-                },
-                postalCode: faker.number.int({ min: 10000, max: 30000 }),
-                state: faker.location.countryCode('alpha-2')
-              },
-              department: faker.commerce.department(),
-              name: faker.company.name(),
-              title: faker.person.jobTitle(),
-            },
-            ein: String(faker.number.int({ min: 10, max: 30 }) + "-" + faker.number.int({ min: 10000, max: 30000 })),
-            ssn: String(faker.number.int({ min: 100, max: 1000 }) + "-" + faker.number.int({ min: 10, max: 100 }) + "-" + faker.number.int({ min: 1000, max: 10000 })),
-            userAgent: faker.internet.userAgent(),
-            crypto: {
-              coin: ["Bitcoin", "Etherum", "Monero", "Coily", "Tether"][Math.floor(Math.random() * 4)],
-              wallet: faker.finance.bitcoinAddress(),
-              network: "Ethereum (ERC20)"
-            }
-          }
-          )
-        );
-      } else {
-        this.users.push(
-          new Object({
-            id: this.users.length + 1,
-            email: email,
-            password: password
-          })
-        );
-      }
-      console.log("register: ", this.users[this.users.length - 1]);
-      this.saveLocalLoggedUser(this.users.length - 1);
+        else {
+          alert("Invalid email or password");
+          return false;
+        }
+      })
       return true;
     },
-    saveLocalLoggedUser(id) {
-      localStorage.setItem('loggedUser', JSON.stringify(this.users[id]));
-      localStorage.setItem('users', JSON.stringify(this.users));
+    register() {
+      // TODO
     },
     alreadyLogged() {
-      if (JSON.parse(localStorage.getItem('loggedUser'))) {
-        return true;
+      if(localStorage.getItem("ALREADY_LOGGED")) {
+        return true
       }
-      return false;
-    },
+      return false
+    }
   },
-  mounted() {
-  }
 }
 </script>
