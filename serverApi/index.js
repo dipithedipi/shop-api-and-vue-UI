@@ -109,8 +109,12 @@ app.post("/login/customer", (req, res) => {
     let password = req.body.password;
     let hashedPassword = CryptoJS.SHA256(String(password + process.env.PASSWORD_SALT)).toString();    
 
-    // console.log(process.env.PASSWORD_SALT)
-    // console.log(hashedPassword)
+    console.log("new login request: ");
+    console.log("email: ", email);
+    console.log("password: ", password);
+    console.log("hashedPassword: ",hashedPassword);
+
+
     db.query('SELECT * FROM customers WHERE email = ? AND pwd = ?', [email, hashedPassword], (err, result) => {
         if (err) {
             console.error('[!] Error: ' + err.stack);
@@ -137,8 +141,8 @@ app.post("/login/customer", (req, res) => {
                 res.status(500).json({ message: "Error creating token!" });
                 return;
             }
-            console.log(result);
-            res.status(200).json({ token: token, user: result });
+            //console.log(result);
+            res.status(200).json({ token: token, user: result[0] });
         });
     });
 });

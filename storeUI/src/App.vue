@@ -8,7 +8,7 @@
       <router-link to="/about">About</router-link>
     </nav>
     <div
-      v-if="alreadyLogged === true"
+      v-if="alreadyLogged === true && $route.path !== '/login'"
       >
       <log-user 
         class="log-user"
@@ -56,21 +56,22 @@ nav a.router-link-exact-active {
 </style>
 
 <script>
+import { mapGetters } from 'vuex';
 import LogUser from '@/components/LogUser.vue';
 
 export default {
   data() {
     return {
       alreadyLogged: false,
-      loggedUser: null,
+      user: null,
     };
   },
   watch:{
     $route (){
       this.alreadyLogged = false;
-      if(JSON.parse(localStorage.getItem('loggedUser'))){
+      if(JSON.parse(localStorage.getItem('user')) && localStorage.getItem("ALREADY_LOGGED")){
         this.alreadyLogged = true;
-        this.loggedUser = JSON.parse(localStorage.getItem('loggedUser'))
+        this.user = JSON.parse(localStorage.getItem('user'))
       }
     }
   },
@@ -78,6 +79,9 @@ export default {
   },
   components: {
     LogUser,
+  },
+  computed: {
+    ...mapGetters(["isLoggedIn", "user"]),
   },
 };
 </script>

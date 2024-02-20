@@ -28,7 +28,7 @@
         color="blue" 
         size="large" 
         variant="tonal" 
-        @click="() => {if(login(userEmail, userPassword)) {this.$router.push({ path: '/products' })}}"
+        @click="login(userEmail, userPassword)"
       >
         Log In
       </v-btn>
@@ -81,17 +81,31 @@
   </div>
   <div v-else>
     You are already logged in, if you want to log in with another account, please log out first.
+    <br>
+    <br>
+    <v-btn
+      prepend-icon="mdi-logout"
+      rounded="sm" 
+      size="large"
+      tonal
+      color="red"
+      @click="logout()"
+      >
+      Logout
+    </v-btn>
   </div>
 </template>
 
 
 <script>
+import { mapMutations } from 'vuex';
 
 export default {
   name: 'HomeView',
   data() {
     return {
       visible: false,
+      user: null,
       userEmail: "",
       userPassword: "",
       emailRules: [
@@ -111,34 +125,40 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(["setUser", "setToken"]),
     login(email, password) {
       if (email === "" || password === "") {
         alert("Please enter email and password");
-        return false;
+        return;
       }
-      fetch("http://127.0.0.1:3000/login/customers", {
+      fetch("http://127.0.0.1:3000/login/customer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.parse({
+        body: JSON.stringify({
           email: email,
           password: password
         })
       })
       .then(response => response.json())
       .then(data => {
-        if(data.status === "success") {
+        if(data.token) {
+          console.log("success")
           localStorage.setItem("ALREADY_LOGGED", true)
           localStorage.setItem("JWT", data.token)
-          return true;
+          localStorage.setItem("user", JSON.stringify(data.user))
+
+          this.setUser(data.user);
+          this.setToken(data.token);
+
+          this.$router.push({ path: '/about' })
         }
         else {
           alert("Invalid email or password");
-          return false;
+          return;
         }
       })
-      return true;
     },
     register() {
       // TODO
@@ -148,6 +168,16 @@ export default {
         return true
       }
       return false
+    },
+    logout() {
+      localStorage.removeItem("ALREADY_LOGGED")
+      localStorage.removeItem("JWT")
+      localStorage.removeItem("user")
+
+      this.setUser(null);
+      this.setToken(null);
+
+      this.$router.go()
     }
   },
 }
