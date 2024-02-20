@@ -151,15 +151,16 @@ app.post("/register/customer", (req, res) => {
     let customerName = req.body.customerName;
     let contactLastName = req.body.contactLastName;
     let contactFirstName = req.body.contactFirstName;
-    let phone = Number(req.body.phone);
+    let phone = req.body.phone;
     let addressLine1 = req.body.addressLine1;
     let addressLine2 = req.body.addressLine2;
     let city = req.body.city;
     let state = req.body.state;
-    let postalCode = Number(req.body.postalCode);
+    let postalCode = req.body.postalCode;
     let country = req.body.country;
-    let salesRepEmployeeNumber = Number(req.body.salesRepEmployeeNumber);
-    let creditLimit = Number(req.body.creditLimit);
+    let salesRepEmployeeNumber = req.body.salesRepEmployeeNumber;
+    let creditLimit = req.body.creditLimit;
+    let img = "https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg"
 
 
     let email = req.body.email;
@@ -180,14 +181,10 @@ app.post("/register/customer", (req, res) => {
         res.status(400).json({ message: "Passwords do not match!" });
         return;
     }
+    console.log(req.body)
 
-    if (!customerName || !contactLastName || !contactFirstName || !phone || !addressLine1 || !city || !state || !postalCode || !country || !salesRepEmployeeNumber || !creditLimit) {
+    if (customerName === "" || contactLastName === "" || contactFirstName === "" || phone === "" || addressLine1 === "" || addressLine2 === "" || city === "" || state === "" || postalCode === "" || country === "" || salesRepEmployeeNumber === "" || creditLimit === "") {
         res.status(400).json({ message: "All fields are required!" });
-        return;
-    }
-
-    if (isNaN(phone) || isNaN(postalCode) || isNaN(salesRepEmployeeNumber) || isNaN(creditLimit)) {
-        res.status(400).json({ message: "Invalid input!" });
         return;
     }
 
@@ -208,7 +205,7 @@ app.post("/register/customer", (req, res) => {
 
         let customerNumber = Math.floor(Math.random() * 1000000);
 
-        db.query('INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, pwd) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, hashedPassword], (err, result) => {
+        db.query('INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, pwd, img) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, hashedPassword, img], (err, result) => {
             if (err) {
                 console.error('[!] Error: ' + err.stack);
                 res.status(500).json({ message: "Database query error!" });

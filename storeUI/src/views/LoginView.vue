@@ -65,6 +65,95 @@
                     ></v-checkbox>
                 </v-card-text>
 
+                <div v-if="!randomInfo">
+                <v-card-text>
+                    Customer Name:
+                    <v-text-field 
+                    v-model="customerName">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Contact Last Name:
+                    <v-text-field 
+                    v-model="contactLastName">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Contact First Name:
+                    <v-text-field 
+                    v-model="contactFirstName">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Phone:
+                    <v-text-field 
+                    v-model="phone">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Address Line 1:
+                    <v-text-field 
+                    v-model="addressLine1">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Address Line 2:
+                    <v-text-field 
+                    v-model="addressLine2">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    City:
+                    <v-text-field 
+                    v-model="city">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    State:
+                    <v-text-field 
+                    v-model="state">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Postal Code:
+                    <v-text-field 
+                    v-model="postalCode">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Country:
+                    <v-text-field 
+                    v-model="country">
+                    </v-text-field>
+                </v-card-text>
+
+                <v-card-text>
+                    Sales Rep Employee Number:
+                    <v-autocomplete
+                    clearable
+                    v-model="salesRepEmployeeNumber"
+                    label="Autocomplete"
+                    :items="employeesNumbers"
+                  ></v-autocomplete>
+                </v-card-text>
+
+                <v-card-text>
+                    Credit Limit:
+                    <v-text-field 
+                    v-model="creditLimit">
+                    </v-text-field>
+                </v-card-text>
+                </div>
+
               <v-card-actions>
                 <v-spacer></v-spacer>
 
@@ -99,6 +188,7 @@
 
 <script>
 import { mapMutations } from 'vuex';
+import { faker } from '@faker-js/faker';
 
 export default {
   name: 'HomeView',
@@ -122,7 +212,24 @@ export default {
         value => (value || '').length >= 6 || 'Min 6 characters',
       ],
       randomInfo: true,
+      customerName: "",
+      contactLastName: "",
+      contactFirstName: "",
+      phone: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+      salesRepEmployeeNumber: "",
+      creditLimit: "",
+      employees: [],
+      employeesNumbers: []
     }
+  },
+  mounted() {
+    this.getEmpoyeesNumbers()
   },
   methods: {
     ...mapMutations(["setUser", "setToken"]),
@@ -160,8 +267,71 @@ export default {
         }
       })
     },
-    register() {
-      // TODO
+    register(email, password) {
+      if(this.randomInfo == true) {
+        this.customerName = "Random Customer Name";
+        this.contactLastName = faker.person.lastName()
+        this.contactFirstName = faker.person.firstName()
+        this.phone = faker.phone.number()
+        this.addressLine1 = faker.location.streetAddress()
+        this.addressLine2 = faker.location.streetAddress()
+        this.city = faker.location.city()
+        this.state = faker.location.countryCode('alpha-2')
+        this.postalCode = faker.number.int({ min: 10000, max: 30000 })
+        this.country = faker.location.country()
+        this.salesRepEmployeeNumber = this.employees[faker.number.int({ min: 0, max: this.employees.length - 1 })].employeeNumber
+        this.creditLimit = faker.number.int({ min: 0, max: 300000 })
+      } else {
+        if (this.customerName === "" || this.contactLastName === "" || this.contactFirstName === "" || this.phone === "" || this.addressLine1 === "" || this.addressLine2 === "" || this.city === "" || this.state === "" || this.postalCode === "" || this.country === "" || this.salesRepEmployeeNumber === "" || this.creditLimit === "") {
+          alert("Client: Please enter all fields");
+          return;
+        }
+        this.salesRepEmployeeNumber = this.salesRepEmployeeNumber.employeeNumber
+      }
+
+      fetch("http://127.0.0.1:3000/register/customer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerName: this.customerName,
+          contactLastName: this.contactLastName,
+          contactFirstName: this.contactFirstName,
+          phone: this.phone,
+          addressLine1: this.addressLine1,
+          addressLine2: this.addressLine2,
+          city: this.city,
+          state: this.state,
+          postalCode: this.postalCode,
+          country: this.country,
+          salesRepEmployeeNumber: this.salesRepEmployeeNumber,
+          creditLimit: this.creditLimit,
+          email: email,
+          password: password,
+          passwordConfirm: password
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.message) {
+          alert(data.message)
+        }
+      })
+    },
+    getEmpoyeesNumbers() {
+      fetch("http://127.0.0.1:3000/employees", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        this.employees = data
+        console.log(this.employees)
+        this.employeesNumbers = data.map(employee => employee.employeeNumber + " - " + String(employee.firstName) + " " + String(employee.lastName))
+      })
     },
     alreadyLogged() {
       if(localStorage.getItem("ALREADY_LOGGED")) {
