@@ -109,10 +109,10 @@ app.post("/login/customer", (req, res) => {
     let password = req.body.password;
     let hashedPassword = CryptoJS.SHA256(String(password + process.env.PASSWORD_SALT)).toString();    
 
-    console.log("new login request: ");
-    console.log("email: ", email);
-    console.log("password: ", password);
-    console.log("hashedPassword: ",hashedPassword);
+    // console.log("new login request: ");
+    // console.log("email: ", email);
+    // console.log("password: ", password);
+    // console.log("hashedPassword: ",hashedPassword);
 
 
     db.query('SELECT * FROM customers WHERE email = ? AND pwd = ?', [email, hashedPassword], (err, result) => {
@@ -213,6 +213,23 @@ app.post("/register/customer", (req, res) => {
             }
             res.status(200).json({ message: "Customer registered successfully!" });
         });
+    });
+});
+
+app.get("/auth", (req, res) => {
+    let token = req.body.token;
+    if (!token) {
+        res.status(400).json({ message: "Token is required!" });
+        return;
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            console.error('[!] Error: ' + err.stack);
+            res.status(500).json({ message: "Error verifying token!" });
+            return;
+        }
+        res.status(200).json(decoded);
     });
 });
 
