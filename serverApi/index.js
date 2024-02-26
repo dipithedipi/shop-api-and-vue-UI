@@ -8,7 +8,7 @@ import sanitizer from "perfect-express-sanitizer";
 import bodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
 import CryptoJS from 'crypto-js';
-
+import verifyToken from './middleware/auth.js';
 
 
 const swaggerDocument = yaml.load('./swagger.yaml');
@@ -90,7 +90,6 @@ app.get('/employees', (req, res) => {
     });
 });
 
-
 app.get('/employees/:email/:password', (req, res) => {
     db.query('SELECT employees.* FROM employees WHERE email = ? AND password = ?', [req.params.email, req.params.password], (err, result) => {
         if (err) {
@@ -129,8 +128,8 @@ app.post("/login/customer", (req, res) => {
 
         jwt.sign(
             { 
-                id: result.customerNumber, 
-                name: result.customerName 
+                id: result[0].customerNumber, 
+                name: result[0].customerName 
             }, 
             process.env.JWT_SECRET, 
             {
@@ -216,22 +215,47 @@ app.post("/register/customer", (req, res) => {
     });
 });
 
-app.get("/auth", (req, res) => {
-    let token = req.body.token;
-    if (!token) {
-        res.status(400).json({ message: "Token is required!" });
+// app.get("/auth", (req, res) => {
+//     let token = req.body.token;
+//     if (!token) {
+//         res.status(400).json({ message: "Token is required!", valid: false });
+//         return;
+//     }
+
+//     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+//         if (err) {
+//             if (process.env.ENVIRONMENT == "development") console.error('[!] Error: ' + err.stack);
+//             res.status(500).json({ message: "Error verifying token!", valid: false });
+//             return;
+//         }
+
+//         res.status(200).json({ message: "Token verified successfully!", valid: true, token_info: decoded });
+//     });
+// });
+
+app.post("/checkout", verifyToken, (req, res) => {
+    let tokenInfo = req.tokenInfo;
+    let customerNumber = tokenInfo.id;
+    let cartItems = req.body.cartItems;
+
+    if (!cartItems) {
+        res.status(400).json({ message: "Cart items are required!" });
         return;
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            console.error('[!] Error: ' + err.stack);
-            res.status(500).json({ message: "Error verifying token!" });
-            return;
-        }
-        res.status(200).json(decoded);
-    });
-});
+    if (cartItems.length === 0) {
+        res.status(400).json({ message: "Cart is empty!" });
+        return;
+    }
+
+    // create new order
+
+    // create new order details
+
+    // update product quantity
+
+    res.status(200).json({ message: "Checkout successful!" });
+})
 
 app.listen(3000, () => {
     console.log(`[+] Server started on port 3000`);
