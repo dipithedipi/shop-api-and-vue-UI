@@ -113,6 +113,148 @@ paths:
                   message:
                     type: string
                     example: "Database query error!"
+  /login/customer:
+    post:
+      summary: "Authenticate a customer"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: "Successful authentication"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: "Invalid email or password"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid email or password!"
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error creating token!"
+  /register/customer:
+    post:
+      summary: "Register a new customer"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      responses:
+        '200':
+          description: "Customer registered successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Customer registered successfully!"
+        '400':
+          description: "Invalid request or duplicate email"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid request or duplicate email!"
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database query error!"
+  /checkout:
+    post:
+      summary: "Process checkout for authenticated customer"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cart:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productCode:
+                        type: string
+                      quantity:
+                        type: integer
+                      MSRP:
+                        type: number
+              required:
+                - cart
+      responses:
+        '200':
+          description: "Checkout successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Checkout successful!"
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Cart items are required!"
+        '500':
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database query error!"
 components:
   schemas:
     Product:
@@ -191,3 +333,8 @@ components:
           type: string
         pwd:
           type: string
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
