@@ -48,7 +48,7 @@
                 :subtitle="item.raw.productDescription">
                 <template v-slot:title>
                   <strong class="text-h6">
-                    {{ item.raw.title }}
+                    {{ item.raw.productName }}
                   </strong>
                 </template>
               </v-list-item>
@@ -103,7 +103,7 @@
                   <tr align="right">
                     <th></th>
                     <td>
-                      <v-btn color="primary" size="small" @click="addToCart(item.raw)">Add to cart</v-btn>
+                      <v-btn :color="(item.raw.quantityInStock > 0) ? 'primary' : 'error'" size="small" @click="addToCart(item.raw)">Add to cart</v-btn>
                     </td>
                   </tr>
                 </tbody>
@@ -143,15 +143,20 @@ export default {
     return {
       products: [],
       category: '',
-      cart: [],
+      cart: JSON.parse(localStorage.getItem('cart')) || [],
       itemsPerPage: 8,
     };
   },
   mounted() {
+    this.cart = JSON.parse(localStorage.getItem('cart')) || [];
     this.getProductsData();
   },
   methods: {
     addToCart(product) {
+      if (product.quantityInStock === 0) {
+        alert('Out of stock');
+        return;
+      }
       if(this.cart.includes(product)) {
         this.cart.find(item => item.productCode === product.productCode).quantity += 1;
       } else {

@@ -4,7 +4,6 @@ import mysql from 'mysql';
 import swaggerUI from 'swagger-ui-express';
 import yaml from 'yamljs';
 import 'dotenv/config';
-import sanitizer from "perfect-express-sanitizer";
 import bodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
 import CryptoJS from 'crypto-js';
@@ -28,14 +27,6 @@ const db = mysql.createConnection({
 });
 
 app.use('/swagger', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
-
-app.use(
-    sanitizer.clean({
-      xss: true,
-      noSql: true,
-      sql: true,
-    })
-  );
 
 db.connect((err) => {
     if (err) {
@@ -217,28 +208,10 @@ app.post("/register/customer", (req, res) => {
     });
 });
 
-// app.get("/auth", (req, res) => {
-//     let token = req.body.token;
-//     if (!token) {
-//         res.status(400).json({ message: "Token is required!", valid: false });
-//         return;
-//     }
-
-//     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//         if (err) {
-//             if (process.env.ENVIRONMENT == "development") console.error('[!] Error: ' + err.stack);
-//             res.status(500).json({ message: "Error verifying token!", valid: false });
-//             return;
-//         }
-
-//         res.status(200).json({ message: "Token verified successfully!", valid: true, token_info: decoded });
-//     });
-// });
-
 app.post("/checkout", verifyToken, async (req, res) => {
     let tokenInfo = req.tokenInfo;
     let customerNumber = tokenInfo.id;
-    let cartItems = req.body.cartItems;
+    let cartItems = req.body.cart;
 
     if (!cartItems) {
         res.status(400).json({ message: "Cart items are required!" });
@@ -251,13 +224,29 @@ app.post("/checkout", verifyToken, async (req, res) => {
     }
 
     try {
+        // check if the products are in stock
+        const productPromises = cartItems.map(item => {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT * FROM products WHERE productCode = ? AND quantityInStock >= ?', [item.productCode, item.quantity], (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else if (result.length === 0) {
+                        reject(new Error("Product not in stock!"));
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        });
+
         // new transaction
         await db.beginTransaction();
-
+        let orderNumber = Math.floor(Math.random() * 1000000);
+    
         // new order
         const orderResult = await new Promise((resolve, reject) => {
             db.query('INSERT INTO orders (orderNumber, orderDate, requiredDate, shippedDate, status, comments, customerNumber) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-            [Math.floor(Math.random() * 1000000), new Date(), new Date(), new Date(), "In Process", "Order placed by customer", customerNumber], 
+            [orderNumber, new Date(), new Date(), new Date(), "In Process", "Order placed by customer", customerNumber], 
             (err, result) => {
                 if (err) {
                     reject(err);
@@ -266,12 +255,12 @@ app.post("/checkout", verifyToken, async (req, res) => {
                 }
             });
         });
-
+        
         // new order details
         const orderDetailPromises = cartItems.map((item, index) => {
             return new Promise((resolve, reject) => {
                 db.query('INSERT INTO orderdetails (orderNumber, productCode, quantityOrdered, priceEach, orderLineNumber) VALUES (?, ?, ?, ?, ?)', 
-                [Math.floor(Math.random() * 1000000), item.productCode, item.quantity, item.buyPrice, index + 1], 
+                [orderNumber, item.productCode, item.quantity, item.MSRP, index + 1], 
                 (err, result) => {
                     if (err) {
                         reject(err);
@@ -310,7 +299,7 @@ app.post("/checkout", verifyToken, async (req, res) => {
         await db.rollback();
 
         console.error('[!] Error: ' + err.stack);
-        res.status(500).json({ message: "Database query error!" });
+        res.status(500).json({ message: "Database query error!" , error: err});
     }
 });
 
