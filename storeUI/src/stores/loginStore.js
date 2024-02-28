@@ -16,31 +16,15 @@ export default new Vuex.Store({
   actions: {},
   getters: {
     isLoggedIn(state) {
-      if (state.token === null || state.token === "" || state.token === undefined) {
-        return false;
-      }
-
-      fetch("http://127.0.0.1:3000/auth", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application",
-        },
-        body: JSON.stringify({ token: state.token }),
-      }).then((res) => {
-        if (res.status === 200) {
-          res.json().then((data) => {
-            return data.valid;
-          });
-        } else {
-          return false;
-        }
-      })
+      return !!state.token;
     },
-user(state) {
-  return state.user;
-},
-token(state) {
-  return state.token;
-},
+
+    user(state) {
+      return state.user;
+    },
+
+    token(state) {
+      return state.token;
+    },
   },
 });

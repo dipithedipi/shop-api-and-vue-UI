@@ -204,7 +204,9 @@ app.post("/register/customer", (req, res) => {
 
         let customerNumber = Math.floor(Math.random() * 1000000);
 
-        db.query('INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, pwd, img) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, hashedPassword, img], (err, result) => {
+        db.query('INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, pwd, img) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        [customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, addressLine2, city, state, postalCode, country, creditLimit, email, salesRepEmployeeNumber, hashedPassword, img], 
+        (err, result) => {
             if (err) {
                 console.error('[!] Error: ' + err.stack);
                 res.status(500).json({ message: "Database query error!" });
@@ -233,7 +235,7 @@ app.post("/register/customer", (req, res) => {
 //     });
 // });
 
-app.post("/checkout", verifyToken, (req, res) => {
+app.post("/checkout", verifyToken, async (req, res) => {
     let tokenInfo = req.tokenInfo;
     let customerNumber = tokenInfo.id;
     let cartItems = req.body.cartItems;
@@ -248,14 +250,69 @@ app.post("/checkout", verifyToken, (req, res) => {
         return;
     }
 
-    // create new order
+    try {
+        // new transaction
+        await db.beginTransaction();
 
-    // create new order details
+        // new order
+        const orderResult = await new Promise((resolve, reject) => {
+            db.query('INSERT INTO orders (orderNumber, orderDate, requiredDate, shippedDate, status, comments, customerNumber) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+            [Math.floor(Math.random() * 1000000), new Date(), new Date(), new Date(), "In Process", "Order placed by customer", customerNumber], 
+            (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
 
-    // update product quantity
+        // new order details
+        const orderDetailPromises = cartItems.map((item, index) => {
+            return new Promise((resolve, reject) => {
+                db.query('INSERT INTO orderdetails (orderNumber, productCode, quantityOrdered, priceEach, orderLineNumber) VALUES (?, ?, ?, ?, ?)', 
+                [Math.floor(Math.random() * 1000000), item.productCode, item.quantity, item.buyPrice, index + 1], 
+                (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        });
 
-    res.status(200).json({ message: "Checkout successful!" });
-})
+        await Promise.all(orderDetailPromises);
+
+        // product quantity update
+        const updateProductPromises = cartItems.map(item => {
+            return new Promise((resolve, reject) => {
+                db.query('UPDATE products SET quantityInStock = quantityInStock - ? WHERE productCode = ?', 
+                [item.quantity, item.productCode], 
+                (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        });
+
+        await Promise.all(updateProductPromises);
+
+        // commit if all queries are successful
+        await db.commit();
+
+        res.status(200).json({ message: "Checkout successful!" });
+    } catch (err) {
+        // rollbck if the transaction fails
+        await db.rollback();
+
+        console.error('[!] Error: ' + err.stack);
+        res.status(500).json({ message: "Database query error!" });
+    }
+});
 
 app.listen(3000, () => {
     console.log(`[+] Server started on port 3000`);

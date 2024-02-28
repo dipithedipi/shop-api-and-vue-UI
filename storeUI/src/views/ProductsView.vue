@@ -99,6 +99,13 @@
                       </span>
                     </td>
                   </tr>
+
+                  <tr align="right">
+                    <th></th>
+                    <td>
+                      <v-btn color="primary" size="small" @click="addToCart(item.raw)">Add to cart</v-btn>
+                    </td>
+                  </tr>
                 </tbody>
               </v-table>
             </v-sheet>
@@ -136,6 +143,7 @@ export default {
     return {
       products: [],
       category: '',
+      cart: [],
       itemsPerPage: 8,
     };
   },
@@ -143,6 +151,15 @@ export default {
     this.getProductsData();
   },
   methods: {
+    addToCart(product) {
+      if(this.cart.includes(product)) {
+        this.cart.find(item => item.productCode === product.productCode).quantity += 1;
+      } else {
+        product.quantity = 1;
+        this.cart.push(product);
+      }
+      localStorage.setItem('cart', JSON.stringify(this.cart));
+    },
     onClickSeeAll() {
       this.itemsPerPage = this.itemsPerPage === 10 ? this.products.length : 10
     },

@@ -3,6 +3,7 @@
     <nav>      
       <router-link to="/products">Home</router-link> |
       <router-link to="/login">Login</router-link> |
+      <router-link to="/cart" >Cart</router-link> |
       <router-link to="/customers">Customers</router-link> |
       <router-link to="/employees">Employees</router-link> |
       <router-link to="/about">About</router-link>
@@ -75,7 +76,11 @@ export default {
       }
     }
   },
-  methods: {
+  beforemount() {
+    if(JSON.parse(localStorage.getItem('user')) && localStorage.getItem("ALREADY_LOGGED")){
+      this.alreadyLogged = true;
+      this.user = JSON.parse(localStorage.getItem('user'))
+    }
   },
   components: {
     LogUser,
